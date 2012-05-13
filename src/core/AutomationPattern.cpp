@@ -148,88 +148,58 @@ midiTime AutomationPattern::length() const
 
 
 
-midiTime AutomationPattern::putValue( const midiTime & _time,
-	const float _value, const bool _quant_pos )
+void AutomationPattern::addControlPoint( midiTime _t, float _val )
 {
-	midiTime newTime = _quant_pos && engine::automationEditor() ?
-		note::quantized( _time, engine::automationEditor()->quantization() )
-		: _time;
+    AutomationControlPoint newCP;
+    newCP.setTime(_t);
+    newCP.setValue(_val);
 
-	m_timeMap[newTime] = _value;
+    if ( m_controlPoints.isEmpty() )
+    {
+        m_controlPoints.append( newCP );
+    }
+    else
+    {
+        AutomationControlPoint tempCP;
 
-	// just one automation value?
-	if( m_timeMap.size() == 1 )
-	{
-		m_hasAutomation = m_objects.isEmpty();	// usually false
-		for( objectVector::iterator it = m_objects.begin();
-						it != m_objects.end(); ++it )
-		{
-			// default value differs from current value?
-			if( *it && _value != ( *it )->initValue<float>() )
-			{
-				// then enable automating this object
-				m_hasAutomation = true;
-			}
-		}
-	}
-	else
-	{
-		// in all other cases assume we have automation
-		m_hasAutomation = true;
-	}
+        if ( m_controlPoints.last().getTime() < tempCP.getTime() )
+        {
+            // The new control point is the last of the list. No need to iterate
+            m_controlPoints.append( tempCP );
+        }
+        else
+        {
+            QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
+            while ( iterator.hasNext() )
+            {
+                if ( iterator.next().getTime() < tempCP.getTime )
+                {
+                    m_controlPoints.insert( iterator, tempCP );
+                    break;
+                }
+            }
+        }
+    }
 
-	// we need to maximize our length in case we're part of a hidden
-	// automation track as the user can't resize this pattern
-	if( getTrack() && getTrack()->type() == track::HiddenAutomationTrack )
-	{
-		changeLength( length() );
-	}
-
-	emit dataChanged();
-
-	return newTime;
+    emit dataChanged();
 }
 
 
 
 
-void AutomationPattern::removeValue( const midiTime & _time )
+void AutomationPattern::removeControlPoint( midiTime _t, float _val)
 {
-	if( _time != 0 )
-	{
-		m_timeMap.remove( _time );
+    QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
+    while ( iterator.hasNext() )
+    {
+        if ( iterator.prev().getTime() == _t )
+        {
+            iterator.remove();
+            break;
+        }
+    }
 
-		if( m_timeMap.size() == 1 )
-		{
-			const float val = m_timeMap[0];
-			m_hasAutomation = false;
-			for( objectVector::iterator it = m_objects.begin();
-						it != m_objects.end(); )
-			{
-				if( *it )
-				{
-					( *it )->setValue( val );
-					if( ( *it )->initValue<float>() != val )
-					{
-						m_hasAutomation = true;
-					}
-					++it;
-				}
-				else
-				{
-					it = m_objects.erase( it );
-				}
-			}
-		}
-
-		if( getTrack() &&
-			getTrack()->type() == track::HiddenAutomationTrack )
-		{
-			changeLength( length() );
-		}
-
-		emit dataChanged();
-	}
+    emit dataChanged();
 }
 
 

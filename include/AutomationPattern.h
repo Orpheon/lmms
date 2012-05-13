@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2008-2010 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * 
+ *
  * This file is part of Linux MultiMedia Studio - http://lmms.sourceforge.net
  *
  * This program is free software; you can redistribute it and/or
@@ -54,10 +54,13 @@ public:
 
 	virtual midiTime length() const;
 
-	midiTime putValue( const midiTime & _time, const float _value,
-						const bool _quant_pos = true );
+	void addObject( AutomatableModel * _obj, bool _search_dup = true );
 
-	void removeValue( const midiTime & _time );
+	void addControlPoint( midiTime _t, float _val );
+
+	void removeControlPoint( midiTime _t, float _val );
+
+	void moveControlPoint( midiTime _old_t, float _old_val, midiTime _new_t, float _new_val );
 
 	inline const timeMap & getTimeMap() const
 	{
