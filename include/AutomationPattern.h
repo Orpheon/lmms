@@ -62,14 +62,9 @@ public:
 
 	void moveControlPoint( midiTime _old_t, float _old_val, midiTime _new_t, float _new_val );
 
-	inline const timeMap & getTimeMap() const
+	inline void getControlPoints()
 	{
-		return m_timeMap;
-	}
-
-	inline timeMap & getTimeMap()
-	{
-		return m_timeMap;
+	    return m_controlPoints;
 	}
 
 	inline bool hasAutomation() const
@@ -115,7 +110,7 @@ private:
 	AutomationTrack * m_autoTrack;
 	QVector<jo_id_t> m_idsToResolve;
 	objectVector m_objects;
-	timeMap m_timeMap;	// actual values
+	QLinkedList<AutomationControlPoint> m_controlPoints;// The actual values
 	bool m_hasAutomation;
 
 

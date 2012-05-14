@@ -32,6 +32,7 @@
 #include "AutomationPatternView.h"
 #include "AutomationEditor.h"
 #include "AutomationTrack.h"
+#include "AutomationControlPoint.h"
 #include "ProjectJournal.h"
 #include "bb_track_container.h"
 #include "song.h"
@@ -45,7 +46,6 @@ AutomationPattern::AutomationPattern( AutomationTrack * _auto_track ) :
 	m_hasAutomation( false )
 {
 	changeLength( midiTime( 1, 0 ) );
-	m_timeMap[0] = 0;
 }
 
 
@@ -57,11 +57,7 @@ AutomationPattern::AutomationPattern( const AutomationPattern & _pat_to_copy ) :
 	m_objects( _pat_to_copy.m_objects ),
 	m_hasAutomation( _pat_to_copy.m_hasAutomation )
 {
-	for( timeMap::const_iterator it = _pat_to_copy.m_timeMap.begin();
-				it != _pat_to_copy.m_timeMap.end(); ++it )
-	{
-		m_timeMap[it.key()] = it.value();
-	}
+    m_controlPoints = _pat_to_copy.getControlPoints();
 }
 
 
@@ -105,7 +101,7 @@ void AutomationPattern::addObject( AutomatableModel * _obj, bool _search_dup )
 		if( m_objects.size() == 1 && !hasAutomation() )
 		{
 			// then initialize default-value
-			putValue( 0, _obj->value<float>(), false );
+			addControlPoint( 0, _obj->value<float>());
 		}
 		connect( _obj, SIGNAL( destroyed( jo_id_t ) ),
 				this, SLOT( objectDestroyed( jo_id_t ) ),
@@ -131,18 +127,9 @@ const AutomatableModel * AutomationPattern::firstObject() const
 
 
 
-
-//TODO: Improve this
 midiTime AutomationPattern::length() const
 {
-	tick_t max_length = 0;
-
-	for( timeMap::const_iterator it = m_timeMap.begin();
-						it != m_timeMap.end(); ++it )
-	{
-		max_length = qMax<tick_t>( max_length, it.key() );
-	}
-	return midiTime( qMax( midiTime( max_length ).getTact() + 1, 1 ), 0 );
+    return m_controlPoints.last().getTime();
 }
 
 
@@ -151,10 +138,10 @@ midiTime AutomationPattern::length() const
 void AutomationPattern::addControlPoint( midiTime _t, float _val )
 {
     AutomationControlPoint newCP;
-    newCP.setTime(_t);
-    newCP.setValue(_val);
+    newCP.setTime( _t );
+    newCP.setValue( _val );
 
-    if ( m_controlPoints.isEmpty() )
+    if( m_controlPoints.isEmpty() )
     {
         m_controlPoints.append( newCP );
     }
@@ -162,7 +149,7 @@ void AutomationPattern::addControlPoint( midiTime _t, float _val )
     {
         AutomationControlPoint tempCP;
 
-        if ( m_controlPoints.last().getTime() < tempCP.getTime() )
+        if( m_controlPoints.last().getTime() < tempCP.getTime() )
         {
             // The new control point is the last of the list. No need to iterate
             m_controlPoints.append( tempCP );
@@ -170,7 +157,7 @@ void AutomationPattern::addControlPoint( midiTime _t, float _val )
         else
         {
             QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
-            while ( iterator.hasNext() )
+            while( iterator.hasNext() )
             {
                 if ( iterator.next().getTime() < tempCP.getTime )
                 {
@@ -190,9 +177,9 @@ void AutomationPattern::addControlPoint( midiTime _t, float _val )
 void AutomationPattern::removeControlPoint( midiTime _t, float _val)
 {
     QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
-    while ( iterator.hasNext() )
+    while( iterator.hasNext() )
     {
-        if ( iterator.prev().getTime() == _t )
+        if( iterator.prev().getTime() == _t )
         {
             iterator.remove();
             break;
@@ -207,14 +194,33 @@ void AutomationPattern::removeControlPoint( midiTime _t, float _val)
 
 float AutomationPattern::valueAt( const midiTime & _time ) const
 {
-	if( m_timeMap.isEmpty() )
-	{
-		return 0;
-	}
-	timeMap::const_iterator v = m_timeMap.lowerBound( _time );
-	// lowerBound returns next value with greater key, therefore we take
-	// the previous element to get the current value
-	return ( v != m_timeMap.begin() ) ? (v-1).value() : v.value();
+    if( m_controlPoints.isEmpty() )
+    {
+        // Should never happen
+        return 0;
+    }
+
+    if( m_controlPoints.last().getTime() < _time )
+    {
+        // The value wanted is outside of the range of the current automation
+        return m_controlPoints.last().getValue();
+    }
+
+    QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
+    while( iterator.hasNext() )
+    {
+        if( iterator.next().getTime() > _time )
+        {
+            // The wanted midiTime is between .prev() and .next()
+
+            AutomationControlPoint prev_point=iterator.prev(), next_point=iterator.next();
+            float d, t;// d = x distance between the two points, t is the interpolation factor
+
+            d = next_point.getTime() - prev_point.getTime();
+            t = ( _time - prev_point.getTime() ) / d;
+            return (prev_point.getValue() + t * ( next_point.getValue() - prev_point.getValue() ) )// Standard linear interpolation: a + t(b-a)
+        }
+    }
 }
 
 
@@ -225,15 +231,16 @@ void AutomationPattern::saveSettings( QDomDocument & _doc, QDomElement & _this )
 	_this.setAttribute( "pos", startPosition() );
 	_this.setAttribute( "len", trackContentObject::length() );
 	_this.setAttribute( "name", name() );
+	_this.setAttribute( "num_cp", m_controlPoints.size() );
 
-	for( timeMap::const_iterator it = m_timeMap.begin();
-						it != m_timeMap.end(); ++it )
-	{
-		QDomElement element = _doc.createElement( "time" );
-		element.setAttribute( "pos", it.key() );
-		element.setAttribute( "value", it.value() );
-		_this.appendChild( element );
-	}
+    QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
+    while( iterator.hasNext() )
+    {
+        QDomElement element = _doc.createElement( "CP" );
+        element.setAttribute( "time", iterator.next().getTime() );
+        element.setAttribute( "value", iterator.next().getValue() );
+        _this.appendChild( element );
+    }
 
 	for( objectVector::const_iterator it = m_objects.begin();
 						it != m_objects.end(); ++it )
@@ -256,6 +263,7 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 
 	movePosition( _this.attribute( "pos" ).toInt() );
 	setName( _this.attribute( "name" ) );
+	float numControlPoints = _this.attribute( "num_cp" );
 
 	for( QDomNode node = _this.firstChild(); !node.isNull();
 						node = node.nextSibling() )
@@ -265,10 +273,12 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 		{
 			continue;
 		}
-		if( element.tagName() == "time" )
+		if( element.tagName() == "CP" )// IMPORTANT: THIS ASSUMES THAT ALL CONTROL POINT VALUES ARE SAVED IN ORDER
 		{
-			m_timeMap[element.attribute( "pos" ).toInt()]
-				= element.attribute( "value" ).toFloat();
+		    AutomationControlPoint newControlPoint;
+		    newControlPoint.setTime( midiTime( element.attribute( "time" ).toInt() ) );
+		    newControlPoint.setValue( element.attribute( "value" ).toFloat() );
+			m_controlPoints.append(newControlPoint);
 		}
 		else if( element.tagName() == "object" )
 		{
@@ -276,7 +286,7 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 		}
 	}
 
-	m_hasAutomation = m_timeMap.size() > 1;
+	m_hasAutomation = not m_controlPoints.isEmpty();
 	if( m_hasAutomation == false )
 	{
 		for( objectVector::iterator it = m_objects.begin();
@@ -284,7 +294,7 @@ void AutomationPattern::loadSettings( const QDomElement & _this )
 		{
 			if( *it )
 			{
-				( *it )->setValue( m_timeMap[0] );
+				( *it )->setValue( m_controlPoints.first().getValue() );
 			}
 		}
 	}
@@ -454,8 +464,8 @@ void AutomationPattern::resolveAllIDs()
 void AutomationPattern::clear()
 {
 	const float val = firstObject()->value<float>();
-	m_timeMap.clear();
-	putValue( 0, val );
+    m_controlPoints.clear();
+    addControlPoint( 0, val );
 
 	if( engine::automationEditor() &&
 		engine::automationEditor()->currentPattern() == this )
