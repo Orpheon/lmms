@@ -720,7 +720,7 @@ void AutomationEditor::mousePressEvent( QMouseEvent * _me )
 							m_editMode == ModeDraw )
 			{
 			    // insert a new control point at that position
-			    m_pattern->addControlPoint(pos_ticks, level)
+			    m_pattern->addControlPoint( pos_ticks, level )
 				// set move-cursor
 				QCursor c( Qt::SizeAllCursor );
 				QApplication::setOverrideCursor( c );
@@ -731,12 +731,9 @@ void AutomationEditor::mousePressEvent( QMouseEvent * _me )
 							m_editMode == ModeDraw ) ||
 					m_editMode == ModeErase )
 			{
-				// erase single value
-				if( it != time_map.end() )
-				{
-					m_pattern->removeValue( it.key() );
-					engine::getSong()->setModified();
-				}
+				// erase a control point there, if one exists
+				m_pattern->removeControlPoint( pos_ticks );
+                engine::getSong()->setModified();
 			}
 			else if( _me->button() == Qt::LeftButton &&
 							m_editMode == ModeSelect )
@@ -810,7 +807,7 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 	if( _me->y() > TopMargin )
 	{
 		float level = getLevel( _me->y() );
-		int x = _me->x();
+		float x = _me->x();
 
 		if( _me->x() <= ValuesWidth )
 		{
@@ -843,10 +840,8 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 				// we moved the value so the value has to be
 				// moved properly according to new starting-
 				// time in the time map of pattern
-				m_pattern->removeValue(
-						midiTime( pos_ticks ) );
-				m_pattern->putValue( midiTime( pos_ticks ),
-								level );
+				m_pattern->removeControlPoint( midiTime( pos_ticks ) );
+				m_pattern->addControlPoint( midiTime( pos_ticks ), level );
 			}
 
 			engine::getSong()->setModified();
@@ -857,65 +852,66 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 				( _me->buttons() & Qt::LeftButton &&
 						m_editMode == ModeErase ) )
 		{
-			m_pattern->removeValue( midiTime( pos_ticks ) );
+			m_pattern->removeControlPoint( midiTime( pos_ticks ) );
 		}
 		else if( _me->buttons() & Qt::NoButton && m_editMode == ModeDraw )
 		{
-			// set move- or resize-cursor
-
-			// get time map of current pattern
-			timeMap & time_map = m_pattern->getTimeMap();
-
-			// will be our iterator in the following loop
-			timeMap::iterator it = time_map.begin();
-			// loop through whole time map...
-			for( ; it != time_map.end(); ++it )
-			{
-				// and check whether the cursor is over an
-				// existing value
-				if( pos_ticks >= it.key() &&
-					( it+1==time_map.end() ||
-						pos_ticks <= (it+1).key() ) &&
-							level <= it.value() )
-				{
-					break;
-				}
-			}
-
-			// did it reach end of map because there's
-			// no value??
-			if( it != time_map.end() )
-			{
-				if( QApplication::overrideCursor() )
-				{
-	if( QApplication::overrideCursor()->shape() != Qt::SizeAllCursor )
-					{
-				while( QApplication::overrideCursor() != NULL )
-				{
-					QApplication::restoreOverrideCursor();
-				}
-
-						QCursor c( Qt::SizeAllCursor );
-						QApplication::setOverrideCursor(
-									c );
-					}
-				}
-				else
-				{
-					QCursor c( Qt::SizeAllCursor );
-					QApplication::setOverrideCursor( c );
-				}
-			}
-			else
-			{
-				// the cursor is over no value, so restore
-				// cursor
-				while( QApplication::overrideCursor() != NULL )
-				{
-					QApplication::restoreOverrideCursor();
-				}
-			}
-		}
+// TODO: Find out what this does
+//			// set move- or resize-cursor
+//
+//			// get time map of current pattern
+//			timeMap & time_map = m_pattern->getTimeMap();
+//
+//			// will be our iterator in the following loop
+//			timeMap::iterator it = time_map.begin();
+//			// loop through whole time map...
+//			for( ; it != time_map.end(); ++it )
+//			{
+//				// and check whether the cursor is over an
+//				// existing value
+//				if( pos_ticks >= it.key() &&
+//					( it+1==time_map.end() ||
+//						pos_ticks <= (it+1).key() ) &&
+//							level <= it.value() )
+//				{
+//					break;
+//				}
+//			}
+//
+//			// did it reach end of map because there's
+//			// no value??
+//			if( it != time_map.end() )
+//			{
+//				if( QApplication::overrideCursor() )
+//				{
+//	if( QApplication::overrideCursor()->shape() != Qt::SizeAllCursor )
+//					{
+//				while( QApplication::overrideCursor() != NULL )
+//				{
+//					QApplication::restoreOverrideCursor();
+//				}
+//
+//						QCursor c( Qt::SizeAllCursor );
+//						QApplication::setOverrideCursor(
+//									c );
+//					}
+//				}
+//				else
+//				{
+//					QCursor c( Qt::SizeAllCursor );
+//					QApplication::setOverrideCursor( c );
+//				}
+//			}
+//			else
+//			{
+//				// the cursor is over no value, so restore
+//				// cursor
+//				while( QApplication::overrideCursor() != NULL )
+//				{
+//					QApplication::restoreOverrideCursor();
+//				}
+//			}
+//		}
 		else if( _me->buttons() & Qt::LeftButton &&
 						m_editMode == ModeSelect &&
 						m_action == ActionSelectValues )
@@ -961,191 +957,78 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 			{
 				--m_selectedLevels;
 			}
-		}
-		else if( _me->buttons() & Qt::LeftButton &&
-					m_editMode == ModeMove &&
-					m_action == ActionMoveSelection )
-		{
-			// move selection + selected values
+        }
+        else
+        {
+            if( _me->buttons() & Qt::LeftButton &&
+                        m_editMode == ModeSelect &&
+                        m_action == ActionSelectValues )
+            {
 
-			// do horizontal move-stuff
-			int pos_ticks = x * DefaultTicksPerTact / m_ppt +
-							m_currentPosition;
-			int ticks_diff = pos_ticks -
-							m_moveStartTick;
-			if( m_selectedTick > 0 )
-			{
-				if( (int) m_selectStartTick +
-							ticks_diff < 0 )
-				{
-					ticks_diff = -m_selectStartTick;
-				}
-			}
-			else
-			{
-				if( (int) m_selectStartTick +
-					m_selectedTick + ticks_diff <
-									0 )
-				{
-					ticks_diff = -(
-							m_selectStartTick +
-							m_selectedTick );
-				}
-			}
-			m_selectStartTick += ticks_diff;
+                int x = _me->x() - ValuesWidth;
+                if( x < 0 && m_currentPosition > 0 )
+                {
+                    x = 0;
+                    QCursor::setPos( mapToGlobal( QPoint( ValuesWidth,
+                                    _me->y() ) ) );
+                    if( m_currentPosition >= 4 )
+                    {
+                        m_leftRightScroll->setValue(
+                                m_currentPosition - 4 );
+                    }
+                    else
+                    {
+                        m_leftRightScroll->setValue( 0 );
+                    }
+                }
+                else if( x > width() - ValuesWidth )
+                {
+                    x = width() - ValuesWidth;
+                    QCursor::setPos( mapToGlobal( QPoint( width(),
+                                _me->y() ) ) );
+                    m_leftRightScroll->setValue( m_currentPosition +
+                                        4 );
+                }
 
-			int tact_diff = ticks_diff / DefaultTicksPerTact;
-			ticks_diff = ticks_diff % DefaultTicksPerTact;
+                // get tick in which the cursor is posated
+                int pos_ticks = x * DefaultTicksPerTact / m_ppt +
+                                m_currentPosition;
 
+                m_selectedTick = pos_ticks -
+                                m_selectStartTick;
+                if( (int) m_selectStartTick + m_selectedTick <
+                                        0 )
+                {
+                    m_selectedTick = -qRound( m_selectStartTick );
+                }
 
-			// do vertical move-stuff
-			float level_diff = level - m_moveStartLevel;
+                float level = getLevel( _me->y() );
 
-			if( m_selectedLevels > 0 )
-			{
-				if( m_selectStartLevel + level_diff
-								< m_minLevel )
-				{
-					level_diff = m_minLevel -
-							m_selectStartLevel;
-				}
-				else if( m_selectStartLevel + m_selectedLevels +
-						level_diff > m_maxLevel )
-				{
-					level_diff = m_maxLevel -
-							m_selectStartLevel -
-							m_selectedLevels;
-				}
-			}
-			else
-			{
-				if( m_selectStartLevel + m_selectedLevels +
-						level_diff < m_minLevel )
-				{
-					level_diff = m_minLevel -
-							m_selectStartLevel -
-							m_selectedLevels;
-				}
-				else if( m_selectStartLevel + level_diff >
-								m_maxLevel )
-				{
-					level_diff = m_maxLevel -
-							m_selectStartLevel;
-				}
-			}
-			m_selectStartLevel += level_diff;
-
-
-			timeMap new_selValuesForMove;
-			for( timeMap::iterator it = m_selValuesForMove.begin();
-					it != m_selValuesForMove.end(); ++it )
-			{
-				midiTime new_value_pos;
-				if( it.key() )
-				{
-					int value_tact =
-						( it.key() /
-							DefaultTicksPerTact )
-								+ tact_diff;
-					int value_ticks =
-						( it.key() %
-							DefaultTicksPerTact )
-								+ ticks_diff;
-					// ensure value_ticks range
-					if( value_ticks / DefaultTicksPerTact )
-					{
-						value_tact += value_ticks
-							/ DefaultTicksPerTact;
-						value_ticks %=
-							DefaultTicksPerTact;
-					}
-					m_pattern->removeValue( it.key() );
-					new_value_pos = midiTime( value_tact,
-							value_ticks );
-				}
-				new_selValuesForMove[
-					m_pattern->putValue( new_value_pos,
-						it.value () + level_diff,
-									false )]
-						= it.value() + level_diff;
-			}
-			m_selValuesForMove = new_selValuesForMove;
-
-			m_moveStartTick = pos_ticks;
-			m_moveStartLevel = level;
-		}
-	}
-	else
-	{
-		if( _me->buttons() & Qt::LeftButton &&
-					m_editMode == ModeSelect &&
-					m_action == ActionSelectValues )
-		{
-
-			int x = _me->x() - ValuesWidth;
-			if( x < 0 && m_currentPosition > 0 )
-			{
-				x = 0;
-				QCursor::setPos( mapToGlobal( QPoint( ValuesWidth,
-								_me->y() ) ) );
-				if( m_currentPosition >= 4 )
-				{
-					m_leftRightScroll->setValue(
-							m_currentPosition - 4 );
-				}
-				else
-				{
-					m_leftRightScroll->setValue( 0 );
-				}
-			}
-			else if( x > width() - ValuesWidth )
-			{
-				x = width() - ValuesWidth;
-				QCursor::setPos( mapToGlobal( QPoint( width(),
-							_me->y() ) ) );
-				m_leftRightScroll->setValue( m_currentPosition +
-									4 );
-			}
-
-			// get tick in which the cursor is posated
-			int pos_ticks = x * DefaultTicksPerTact / m_ppt +
-							m_currentPosition;
-
-			m_selectedTick = pos_ticks -
-							m_selectStartTick;
-			if( (int) m_selectStartTick + m_selectedTick <
-									0 )
-			{
-				m_selectedTick = -qRound( m_selectStartTick );
-			}
-
-			float level = getLevel( _me->y() );
-
-			if( level <= m_bottomLevel )
-			{
-				QCursor::setPos( mapToGlobal( QPoint( _me->x(),
-							height() -
-							ScrollBarSize ) ) );
-				m_topBottomScroll->setValue(
-					m_topBottomScroll->value() + 1 );
-				level = m_bottomLevel;
-			}
-			else if( level >= m_topLevel )
-			{
-				QCursor::setPos( mapToGlobal( QPoint( _me->x(),
-								TopMargin ) ) );
-				m_topBottomScroll->setValue(
-					m_topBottomScroll->value() - 1 );
-				level = m_topLevel;
-			}
-			m_selectedLevels = level - m_selectStartLevel;
-			if( level <= m_selectStartLevel )
-			{
-				--m_selectedLevels;
-			}
-		}
-		QApplication::restoreOverrideCursor();
-	}
+                if( level <= m_bottomLevel )
+                {
+                    QCursor::setPos( mapToGlobal( QPoint( _me->x(),
+                                height() -
+                                ScrollBarSize ) ) );
+                    m_topBottomScroll->setValue(
+                        m_topBottomScroll->value() + 1 );
+                    level = m_bottomLevel;
+                }
+                else if( level >= m_topLevel )
+                {
+                    QCursor::setPos( mapToGlobal( QPoint( _me->x(),
+                                    TopMargin ) ) );
+                    m_topBottomScroll->setValue(
+                        m_topBottomScroll->value() - 1 );
+                    level = m_topLevel;
+                }
+                m_selectedLevels = level - m_selectStartLevel;
+                if( level <= m_selectStartLevel )
+                {
+                    --m_selectedLevels;
+                }
+            }
+            QApplication::restoreOverrideCursor();
+        }
 
 	update();
 }
@@ -1444,8 +1327,7 @@ void AutomationEditor::paintEvent( QPaintEvent * _pe )
 							is_selected );
 			}
 			else printf("not in range\n");
-			++it;
-		} while( it != time_map.end() );
+		} while( iterator.hasNext() );
 	}
 	else
 	{
