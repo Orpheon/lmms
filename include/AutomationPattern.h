@@ -60,8 +60,6 @@ public:
 
 	void removeControlPoint( midiTime _t, float _val );
 
-	void moveControlPoint( midiTime _old_t, float _old_val, midiTime _new_t, float _new_val );
-
 	inline void getControlPoints()
 	{
 	    return m_controlPoints;

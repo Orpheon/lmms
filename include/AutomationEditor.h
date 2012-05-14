@@ -4,7 +4,7 @@
  *
  * Copyright (c) 2008-2009 Tobias Doerffel <tobydox/at/users.sourceforge.net>
  * Copyright (c) 2006-2008 Javier Serrano Polo <jasp00/at/users.sourceforge.net>
- * 
+ *
  * This file is part of Linux MultiMedia Studio - http://lmms.sourceforge.net
  *
  * This program is free software; you can redistribute it and/or
@@ -93,14 +93,11 @@ protected:
 	virtual void wheelEvent( QWheelEvent * _we );
 
 	float getLevel( int _y );
-	static inline void drawValueRect( QPainter & _p, int _x, int _y,
-						int _width, int _height,
-						const bool _is_selected );
 	void removeSelection();
 	void selectAll();
 	void getSelectedValues( timeMap & _selected_values );
 
-	void drawLine( int x0, float y0, int x1, float y1 );
+	void drawLine( float x0, float y0, float x1, float y1 );
 
 
 protected slots:

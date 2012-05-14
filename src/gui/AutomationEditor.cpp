@@ -454,20 +454,20 @@ void AutomationEditor::update()
 
 
 
-
-inline void AutomationEditor::drawValueRect( QPainter & _p,
-						int _x, int _y,
-						int _width, int _height,
-						const bool _is_selected )
-{
-	_p.fillRect( _x, _y, _width, _height, engine::getLmmsStyle()->color(
-			_is_selected ?
-				LmmsStyle::AutomationSelectedBarFill :
-				LmmsStyle::AutomationBarFill ) );
-
-	_p.drawLine( _x - 1, _y, _x + 1, _y );
-	_p.drawLine( _x, _y - 1, _x, _y + 1 );
-}
+// TODO: Delete
+//inline void AutomationEditor::drawValueRect( QPainter & _p,
+//						int _x, int _y,
+//						int _width, int _height,
+//						const bool _is_selected )
+//{
+//	_p.fillRect( _x, _y, _width, _height, engine::getLmmsStyle()->color(
+//			_is_selected ?
+//				LmmsStyle::AutomationSelectedBarFill :
+//				LmmsStyle::AutomationBarFill ) );
+//
+//	_p.drawLine( _x - 1, _y, _x + 1, _y );
+//	_p.drawLine( _x, _y - 1, _x, _y + 1 );
+//}
 
 
 
@@ -639,11 +639,11 @@ void AutomationEditor::leaveEvent( QEvent * _e )
 }
 
 
-void AutomationEditor::drawLine( int _x0, float _y0, int _x1, float _y1 )
+void AutomationEditor::drawLine( float _x0, float _y0, float _x1, float _y1 )
 {
-	int deltax = qRound( qAbs<float>( _x1 - _x0 ) );
+	float deltax = qRound( qAbs<float>( _x1 - _x0 ) );
 	float deltay = qAbs<float>( _y1 - _y0 );
-	int x = _x0;
+	float x = _x0;
 	float y = _y0;
 	int xstep;
 	int ystep;
@@ -681,7 +681,8 @@ void AutomationEditor::drawLine( int _x0, float _y0, int _x1, float _y1 )
 		y = _y0 + ( ystep * yscale * i );
 
 		x += xstep;
-		i += 1;
+		i++;
+		// TODO: WTF is this? Come back when understand
 		m_pattern->removeValue( midiTime( x ) );
 		m_pattern->putValue( midiTime( x ), y );
 	}
@@ -702,7 +703,7 @@ void AutomationEditor::mousePressEvent( QMouseEvent * _me )
 	{
 		float level = getLevel( _me->y() );
 
-		int x = _me->x();
+		float x = _me->x();
 
 		if( x > ValuesWidth )
 		{
@@ -714,69 +715,12 @@ void AutomationEditor::mousePressEvent( QMouseEvent * _me )
 			int pos_ticks = x * DefaultTicksPerTact / m_ppt +
 							m_currentPosition;
 
-			// get time map of current pattern
-			timeMap & time_map = m_pattern->getTimeMap();
-
-			// will be our iterator in the following loop
-			timeMap::iterator it = time_map.begin();
-
-			// loop through whole time-map...
-			while( it != time_map.end() )
-			{
-				midiTime len = 4;
-
-				// and check whether the user clicked on an
-				// existing value
-				if( pos_ticks >= it.key() &&
-					len > 0 &&
-					( it+1==time_map.end() ||
-						pos_ticks <= (it+1).key() ) &&
-		( pos_ticks<= it.key() + DefaultTicksPerTact *4 / m_ppt ) &&
-					level <= it.value() )
-				{
-					break;
-				}
-				++it;
-			}
-
 			// left button??
 			if( _me->button() == Qt::LeftButton &&
 							m_editMode == ModeDraw )
 			{
-				// Connect the dots
-				if( _me->modifiers() & Qt::ShiftModifier )
-				{
-					drawLine( m_drawLastTick,
-							m_drawLastLevel,
-							pos_ticks, level );
-				}
-				m_drawLastTick = pos_ticks;
-				m_drawLastLevel = level;
-
-				// did it reach end of map because
-				// there's no value??
-				if( it == time_map.end() )
-				{
-					// then set new value
-					midiTime value_pos( pos_ticks );
-
-					midiTime new_time =
-						m_pattern->putValue( value_pos,
-									level );
-
-					// reset it so that it can be used for
-					// ops (move, resize) after this
-					// code-block
-					it = time_map.find( new_time );
-				}
-
-				// move it
-				m_action = ActionMoveValue;
-				int aligned_x = (int)( (float)( (
-						it.key() -
-						m_currentPosition ) *
-						m_ppt ) / DefaultTicksPerTact );
-				m_moveXOffset = x - aligned_x - 1;
+			    // insert a new control point at that position
+			    m_pattern->addControlPoint(pos_ticks, level)
 				// set move-cursor
 				QCursor c( Qt::SizeAllCursor );
 				QApplication::setOverrideCursor( c );
