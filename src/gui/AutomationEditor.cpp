@@ -911,7 +911,7 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 //					QApplication::restoreOverrideCursor();
 //				}
 //			}
-//		}
+		}
 		else if( _me->buttons() & Qt::LeftButton &&
 						m_editMode == ModeSelect &&
 						m_action == ActionSelectValues )
@@ -1232,102 +1232,167 @@ void AutomationEditor::paintEvent( QPaintEvent * _pe )
 
 	if( validPattern() )
 	{
-		timeMap & time_map = m_pattern->getTimeMap();
-		timeMap::iterator it = time_map.begin();
-		p.setPen( engine::getLmmsStyle()->color(
-					LmmsStyle::AutomationBarValue ) );
+        p.setPen( engine::getLmmsStyle()->color(
+                LmmsStyle::AutomationBarValue ) );
+
+        QMutableListIterator<AutomationControlPoint> iterator( m_pattern->getControlPoints() );
+
+        // declare stuff outside of the loop
+        float minTimeVisible = ( m_currentPosition * DefaultTicksPerTact / m_ppt ), maxTimeVisible = ( m_currentPosition * DefaultTicksPerTact / m_ppt ) + width();
+        float x1, y1, x2, y2, vec_x, vec_y, d;
 		do
 		{
-			Sint32 len_ticks = 4;
+		    if( ( iterator.next().getTime() > maxTimeVisible ) or ( iterator.next().getTime() >  minTimeVisible ) )
+		    {
+                // The current point is far out of the screen, continue to the next one
+                continue;
+		    }
 
-			const float level = it.value();
 
-			Sint32 pos_ticks = it.key();
+            // Extract the real values of the line
+            x1 = iterator.prev().getTime();
+            y1 = iterator.prev().getValue();
+            x2 = iterator.next().getTime();
+            y2 = iterator.next().getValue();
 
-			const int x = ( pos_ticks - m_currentPosition ) *
-						m_ppt / DefaultTicksPerTact;
-			if( x > width() - ValuesWidth )
-			{
-				break;
-			}
+            // a vector pointing in the direction of the line, used for scaling
+            vec_x = x2 - x1;
+            vec_y = y2 - y1;
 
-			int rect_width;
-			if( it+1 != time_map.end() )
-			{
-				timeMap::iterator it_prev = it+1;
-				Sint32 next_pos_ticks = it_prev.key();
-				int next_x = ( next_pos_ticks
-					- m_currentPosition ) * m_ppt /
-							DefaultTicksPerTact;
-				// skip this value if not in visible area at all
-/*				if( next_x > width() )
-				{
-					break;
-				}*/
-				rect_width = next_x - x;
-			}
-			else
-			{
-				rect_width = width() - x;
-			}
+            // Now scale the line so that it fits in the screen, if it extends outside
+            if( x1 < minTimeVisible )
+            {
+                d = minTimeVisible - x1;
+                x1 = minTimeVisible;
+                y1 = y1 + d * vec_y / vec_x;
+            }
 
-			// is the value in visible area?
-			if( ( level >= m_bottomLevel && level <= m_topLevel )
-				|| ( level > m_topLevel && m_topLevel >= 0 )
-				|| ( level < m_bottomLevel
-						&& m_bottomLevel <= 0 ) )
-			{
-				bool is_selected = false;
-				// if we're in move-mode, we may only draw
-				// values in selected area, that have originally
-				// been selected and not values that are now in
-				// selection because the user moved it...
-				if( m_editMode == ModeMove )
-				{
-					if( m_selValuesForMove.contains(
-								it.key() ) )
-					{
-						is_selected = true;
-					}
-				}
-				else if( level >= selLevel_start &&
-					level <= selLevel_end &&
-					pos_ticks >= sel_pos_start &&
-					pos_ticks + len_ticks <=
-								sel_pos_end )
-				{
-					is_selected = true;
-				}
+            if( y1 < m_bottomLevel )
+            {
+                d = m_bottomLevel - y1;
+                y1 = m_bottomLevel;
+                x1 = x1 + d * vec_x / vec_y;
+            }
 
-				// we've done and checked all, lets draw the
-				// value
-				int y_start;
-				int rect_height;
-				if( m_y_auto )
-				{
-					y_start = (int)( grid_bottom
-						- ( grid_bottom - TopMargin )
-						* ( level - m_minLevel )
-						/ ( m_maxLevel - m_minLevel ) );
-					int y_end = (int)( grid_bottom
-						+ ( grid_bottom - TopMargin )
-						* m_minLevel
-						/ ( m_maxLevel - m_minLevel ) );
-					rect_height = y_end - y_start;
-				}
-				else
-				{
-					y_start = (int)( grid_bottom - ( level
-							- m_bottomLevel )
-							* m_y_delta );
-					rect_height = (int)( level * m_y_delta );
-				}
-				drawValueRect( p, x + ValuesWidth, y_start,
-							rect_width, rect_height,
-							is_selected );
-			}
-			else printf("not in range\n");
+            if( x2 > maxTimeVisible )
+            {
+                d = maxTimeVisible - x2;
+                x2 = maxTimeVisible;
+                y2 = y2 + d * vec_y / vec_x;
+            }
+
+            if( y2 < m_topLevel )
+            {
+                d = m_topLevel - y2;
+                y2 = m_topLevel;
+                x2 = x2 + d * vec_x / vec_y;
+            }
+
+            // Convert to screen coordinates
+            x1 -= minTimeVisible;
+            x2 -= minTimeVisible;
+            x1 *= m_ppt / DefaultTicksPerTact;
+            x2 *= m_ppt / DefaultTicksPerTact;
+
+
+            // Draw the line
+            drawLine( <int>x1, <int>y1, <int>x2, <int>y2 );
+
 		} while( iterator.hasNext() );
+
+
+//		do
+//		{
+//			Sint32 len_ticks = 4;
+//
+//			const float level = it.value();
+//
+//			Sint32 pos_ticks = it.key();
+//
+//			const int x = ( pos_ticks - m_currentPosition ) *
+//						m_ppt / DefaultTicksPerTact;
+//			if( x > width() - ValuesWidth )
+//			{
+//				break;
+//			}
+//
+//			int rect_width;
+//			if( it+1 != time_map.end() )
+//			{
+//				timeMap::iterator it_prev = it+1;
+//				Sint32 next_pos_ticks = it_prev.key();
+//				int next_x = ( next_pos_ticks
+//					- m_currentPosition ) * m_ppt /
+//							DefaultTicksPerTact;
+//				// skip this value if not in visible area at all
+// /*				if( next_x > width() )
+//				{
+//					break;
+//				}*/
+//				rect_width = next_x - x;
+//			}
+//			else
+//			{
+//				rect_width = width() - x;
+//			}
+//
+//			// is the value in visible area?
+//			if( ( level >= m_bottomLevel && level <= m_topLevel )
+//				|| ( level > m_topLevel && m_topLevel >= 0 )
+//				|| ( level < m_bottomLevel
+//						&& m_bottomLevel <= 0 ) )
+//			{
+//				bool is_selected = false;
+//				// if we're in move-mode, we may only draw
+//				// values in selected area, that have originally
+//				// been selected and not values that are now in
+//				// selection because the user moved it...
+//				if( m_editMode == ModeMove )
+//				{
+//					if( m_selValuesForMove.contains(
+//								it.key() ) )
+//					{
+//						is_selected = true;
+//					}
+//				}
+//				else if( level >= selLevel_start &&
+//					level <= selLevel_end &&
+//					pos_ticks >= sel_pos_start &&
+//					pos_ticks + len_ticks <=
+//								sel_pos_end )
+//				{
+//					is_selected = true;
+//				}
+//
+//				// we've done and checked all, lets draw the
+//				// value
+//				int y_start;
+//				int rect_height;
+//				if( m_y_auto )
+//				{
+//					y_start = (int)( grid_bottom
+//						- ( grid_bottom - TopMargin )
+//						* ( level - m_minLevel )
+//						/ ( m_maxLevel - m_minLevel ) );
+//					int y_end = (int)( grid_bottom
+//						+ ( grid_bottom - TopMargin )
+//						* m_minLevel
+//						/ ( m_maxLevel - m_minLevel ) );
+//					rect_height = y_end - y_start;
+//				}
+//				else
+//				{
+//					y_start = (int)( grid_bottom - ( level
+//							- m_bottomLevel )
+//							* m_y_delta );
+//					rect_height = (int)( level * m_y_delta );
+//				}
+//				drawValueRect( p, x + ValuesWidth, y_start,
+//							rect_width, rect_height,
+//							is_selected );
+//			}
+//			else printf("not in range\n");
+//		} while( iterator.hasNext() );
 	}
 	else
 	{
@@ -1343,27 +1408,27 @@ void AutomationEditor::paintEvent( QPaintEvent * _pe )
 	}
 
 	// now draw selection-frame
-	int x = ( sel_pos_start - m_currentPosition ) * m_ppt /
-							DefaultTicksPerTact;
-	int w = ( sel_pos_end - sel_pos_start ) * m_ppt / DefaultTicksPerTact;
-	int y, h;
-	if( m_y_auto )
-	{
-		y = (int)( grid_bottom - ( ( grid_bottom - TopMargin )
-				* ( selLevel_start - m_minLevel )
-				/ (float)( m_maxLevel - m_minLevel ) ) );
-		h = (int)( grid_bottom - ( ( grid_bottom - TopMargin )
-				* ( selLevel_end - m_minLevel )
-				/ (float)( m_maxLevel - m_minLevel ) ) - y );
-	}
-	else
-	{
-		y = (int)( grid_bottom - ( selLevel_start - m_bottomLevel )
-								* m_y_delta );
-		h = (int)( ( selLevel_start - selLevel_end ) * m_y_delta );
-	}
-	p.setPen( QColor( 0, 64, 192 ) );
-	p.drawRect( x + ValuesWidth, y, w, h );
+//	int x = ( sel_pos_start - m_currentPosition ) * m_ppt /
+//							DefaultTicksPerTact;
+//	int w = ( sel_pos_end - sel_pos_start ) * m_ppt / DefaultTicksPerTact;
+//	int y, h;
+//	if( m_y_auto )
+//	{
+//		y = (int)( grid_bottom - ( ( grid_bottom - TopMargin )
+//				* ( selLevel_start - m_minLevel )
+//				/ (float)( m_maxLevel - m_minLevel ) ) );
+//		h = (int)( grid_bottom - ( ( grid_bottom - TopMargin )
+//				* ( selLevel_end - m_minLevel )
+//				/ (float)( m_maxLevel - m_minLevel ) ) - y );
+//	}
+//	else
+//	{
+//		y = (int)( grid_bottom - ( selLevel_start - m_bottomLevel )
+//								* m_y_delta );
+//		h = (int)( ( selLevel_start - selLevel_end ) * m_y_delta );
+//	}
+//	p.setPen( QColor( 0, 64, 192 ) );
+//	p.drawRect( x + ValuesWidth, y, w, h );
 
 	// TODO: Get this out of paint event
 	int l = validPattern() ? (int) m_pattern->length() : 0;

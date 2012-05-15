@@ -27,6 +27,7 @@
 #include "AutomatableModel.h"
 #include "AutomationRecorder.h"
 #include "AutomationPattern.h"
+#include "AutomationControlPoint.h"
 #include "ControllerConnection.h"
 
 
@@ -526,7 +527,7 @@ void AutomatableModel::copyValue()
 
 
 
-void AutomatableModel::pasteValue()	
+void AutomatableModel::pasteValue()
 {
 	setValue( __copiedValue );
 }

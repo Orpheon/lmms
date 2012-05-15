@@ -60,7 +60,7 @@ public:
 
 	void removeControlPoint( midiTime _t, float _val );
 
-	inline void getControlPoints()
+	inline QLinkedList<> getControlPoints()
 	{
 	    return m_controlPoints;
 	}
