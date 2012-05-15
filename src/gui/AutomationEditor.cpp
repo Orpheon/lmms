@@ -675,17 +675,17 @@ void AutomationEditor::drawLine( float _x0, float _y0, float _x1, float _y1 )
 		ystep = -1;
 	}
 
-	int i = 0;
-	while( i < deltax )
-	{
-		y = _y0 + ( ystep * yscale * i );
-
-		x += xstep;
-		i++;
-		// TODO: WTF is this? Come back when understand
-		m_pattern->removeValue( midiTime( x ) );
-		m_pattern->putValue( midiTime( x ), y );
-	}
+//	int i = 0;
+//	while( i < deltax )
+//	{
+//		y = _y0 + ( ystep * yscale * i );
+//
+//		x += xstep;
+//		i++;
+//		// TODO: WTF is this? Come back when understand
+//		m_pattern->removeValue( midiTime( x ) );
+//		m_pattern->putValue( midiTime( x ), y );
+//	}
 }
 
 
@@ -720,7 +720,7 @@ void AutomationEditor::mousePressEvent( QMouseEvent * _me )
 							m_editMode == ModeDraw )
 			{
 			    // insert a new control point at that position
-			    m_pattern->addControlPoint( pos_ticks, level )
+			    m_pattern->addControlPoint( pos_ticks, level );
 				// set move-cursor
 				QCursor c( Qt::SizeAllCursor );
 				QApplication::setOverrideCursor( c );
@@ -856,6 +856,7 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
 		}
 		else if( _me->buttons() & Qt::NoButton && m_editMode == ModeDraw )
 		{
+		    ;
 // TODO: Find out what this does
 //			// set move- or resize-cursor
 //
@@ -1029,6 +1030,7 @@ void AutomationEditor::mouseMoveEvent( QMouseEvent * _me )
             }
             QApplication::restoreOverrideCursor();
         }
+    }
 
 	update();
 }
@@ -1739,7 +1741,7 @@ void AutomationEditor::moveButtonToggled()
 
 
 
-void AutomationEditor::selectAll()
+/*void AutomationEditor::selectAll()
 {
 	QMutexLocker m( &m_patternMutex );
 	if( !validPattern() )
@@ -1928,7 +1930,7 @@ void AutomationEditor::deleteSelectedValues()
 		engine::getSongEditor()->update();
 	}
 }
-
+*/
 
 
 

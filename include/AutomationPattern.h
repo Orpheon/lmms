@@ -30,6 +30,7 @@
 #include <QtCore/QPointer>
 
 #include "track.h"
+#include "AutomationControlPoint.h"
 
 
 class AutomationTrack;
@@ -58,9 +59,9 @@ public:
 
 	void addControlPoint( midiTime _t, float _val );
 
-	void removeControlPoint( midiTime _t, float _val );
+	void removeControlPoint( midiTime _t);
 
-	inline QLinkedList<> getControlPoints()
+	inline QLinkedList<AutomationControlPoint> getControlPoints()
 	{
 	    return m_controlPoints;
 	}

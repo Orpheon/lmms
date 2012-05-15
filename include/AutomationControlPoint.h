@@ -48,6 +48,6 @@ class AutomationControlPoint
     {
         m_value = _new_value;
     }
-}
+};
 
 #endif

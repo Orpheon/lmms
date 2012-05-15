@@ -174,7 +174,7 @@ void AutomationPattern::addControlPoint( midiTime _t, float _val )
 
 
 
-void AutomationPattern::removeControlPoint( midiTime _t, float _val)
+void AutomationPattern::removeControlPoint( midiTime _t )
 {
     QMutableListIterator<AutomationControlPoint> iterator( m_controlPoints );
     while( iterator.hasNext() )
