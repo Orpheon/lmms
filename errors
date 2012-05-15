@@ -1,0 +1,24 @@
+In file included from /home/alexander/Programming/C++/lmms/include/AutomationEditor.h:36:0,
+                 from /home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:27:
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h:58:7: error: ‘void AutomationPattern::addObject(AutomatableModel*, bool)’ cannot be overloaded
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h:52:7: error: with ‘void AutomationPattern::addObject(AutomatableModel*, bool)’
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h:112:38: error: field ‘m_controlPoints’ has incomplete type
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h: In member function ‘QLinkedList<AutomationControlPoint> AutomationPattern::getControlPoints()’:
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h:65:2: error: return type ‘struct QLinkedList<AutomationControlPoint>’ is incomplete
+/home/alexander/Programming/C++/lmms/include/AutomationPattern.h:66:13: error: ‘m_controlPoints’ was not declared in this scope
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp: In member function ‘void AutomationEditor::drawLine(float, float, float, float)’:
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:646:8: warning: unused variable ‘x’ [-Wunused-variable]
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:647:8: warning: unused variable ‘y’ [-Wunused-variable]
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:658:8: warning: unused variable ‘yscale’ [-Wunused-variable]
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp: In member function ‘virtual void AutomationEditor::paintEvent(QPaintEvent*)’:
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1240:94: error: invalid use of void expression
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1255:27: error: ‘class QMutableListIterator<AutomationControlPoint>’ has no member named ‘prev’
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1256:27: error: ‘class QMutableListIterator<AutomationControlPoint>’ has no member named ‘prev’
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:23: error: expected primary-expression before ‘<’ token
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:24: error: expected primary-expression before ‘int’
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:32: error: expected primary-expression before ‘<’ token
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:33: error: expected primary-expression before ‘int’
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:41: error: expected primary-expression before ‘<’ token
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:42: error: expected primary-expression before ‘int’
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:50: error: expected primary-expression before ‘<’ token
+/home/alexander/Programming/C++/lmms/src/gui/AutomationEditor.cpp:1301:51: error: expected primary-expression before ‘int’
