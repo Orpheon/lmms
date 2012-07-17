@@ -43,13 +43,13 @@ class ADnote    //ADDitive note
     public:
         /**Constructor.
          * @param pars Note Parameters
-         * @param ctl_ Pointer to system Controller
+         * @param ctl_ Pointer to system ZASF_Controller
          * @param freq Base frequency for note
          * @param velocity Velocity of note
          * @param portamento_ 1 if the note has portamento
          * @param midinote_ The midi number of the note
          * @param besilent Start silent note if true*/
-        ADnote(ADnoteParameters *pars, Controller *ctl_, REALTYPE freq,
+        ADnote(ADnoteParameters *pars, ZASF_Controller *ctl_, REALTYPE freq,
                REALTYPE velocity, int portamento_, int midinote_,
                bool besilent);
         /**Destructor*/
@@ -131,7 +131,7 @@ class ADnote    //ADDitive note
         REALTYPE velocity, basefreq;
 
         ONOFFTYPE   NoteEnabled;
-        Controller *ctl;
+        ZASF_Controller *ctl;
 
         /*****************************************************************/
         /*                    GLOBAL PARAMETERS                          */

@@ -145,7 +145,7 @@ class Part
         REALTYPE volume, oldvolumel, oldvolumer; //this is applied by Master
         REALTYPE panning; //this is applied by Master, too
 
-        Controller ctl; //Part controllers
+        ZASF_Controller ctl; //Part controllers
 
         EffectMgr    *partefx[NUM_PART_EFX]; //insertion part effects (they are part of the instrument)
         unsigned char Pefxroute[NUM_PART_EFX]; //how the effect's output is routed(to next effect/to out)

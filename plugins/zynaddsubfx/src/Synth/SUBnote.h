@@ -33,7 +33,7 @@ class SUBnote
 {
     public:
         SUBnote(SUBnoteParameters *parameters,
-                Controller *ctl_,
+                ZASF_Controller *ctl_,
                 REALTYPE freq,
                 REALTYPE velocity,
                 int portamento_,
@@ -107,7 +107,7 @@ class SUBnote
         REALTYPE *tmpsmp;
         REALTYPE *tmprnd; //this is filled with random numbers
 
-        Controller *ctl;
+        ZASF_Controller *ctl;
         int      oldpitchwheel, oldbandwidth;
         REALTYPE globalfiltercenterq;
 

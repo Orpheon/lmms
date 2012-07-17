@@ -1,5 +1,5 @@
 /*
-  ZynAddSubFX - a software synthesizer
+  ZASF_AddSubFX - a software synthesizer
 
   Controller.h - (Midi) Controllers implementation
   Copyright (C) 2002-2005 Nasca Octavian Paul
@@ -26,13 +26,14 @@
 
 #include "../globals.h"
 #include "../Misc/XMLwrapper.h"
+#include "../../../../include/Controller.h"
 
 /**(Midi) Controllers implementation*/
-class Controller
+class ZASF_Controller
 {
     public:
-        Controller();
-        ~Controller();
+        ZASF_Controller();
+        ~ZASF_Controller();
         void resetall();
 
         void add2XML(XMLwrapper *xml);

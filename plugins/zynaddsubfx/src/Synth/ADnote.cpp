@@ -30,7 +30,7 @@
 
 
 ADnote::ADnote(ADnoteParameters *pars,
-               Controller *ctl_,
+               ZASF_Controller *ctl_,
                REALTYPE freq,
                REALTYPE velocity,
                int portamento_,
@@ -426,7 +426,7 @@ void ADnote::ADlegatonote(REALTYPE freq,
                           bool externcall)
 {
     ADnoteParameters *pars = partparams;
-    //Controller *ctl_=ctl;
+    //ZASF_Controller *ctl_=ctl;
 
     // Manage legato stuff
     if(externcall)
@@ -1214,7 +1214,7 @@ void ADnote::computecurrentparameters()
                               / 100.0;
             voicefreq  = getvoicebasefreq(nvoice)
                          * pow(2, (voicepitch + globalpitch) / 12.0);               //Hz frequency
-            voicefreq *= ctl->pitchwheel.relfreq; //change the frequency by the controller
+            voicefreq *= ctl->pitchwheel.relfreq; //change the frequency by the ZASF_Controller
             setfreq(nvoice, voicefreq * portamentofreqrap);
 
             /***************/

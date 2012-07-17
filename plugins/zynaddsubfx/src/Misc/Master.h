@@ -130,7 +130,7 @@ class Master
         REALTYPE      vuoutpeakpart[NUM_MIDI_PARTS];
         unsigned char fakepeakpart[NUM_MIDI_PARTS]; //this is used to compute the "peak" when the part is disabled
 
-        Controller ctl;
+        ZASF_Controller ctl;
         int swaplr; //1 if L and R are swapped
 
         //Sequencer

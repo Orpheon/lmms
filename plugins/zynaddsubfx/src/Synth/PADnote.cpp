@@ -23,7 +23,7 @@
 #include "../Misc/Config.h"
 
 PADnote::PADnote(PADnoteParameters *parameters,
-                 Controller *ctl_,
+                 ZASF_Controller *ctl_,
                  REALTYPE freq,
                  REALTYPE velocity,
                  int portamento_,
@@ -180,7 +180,7 @@ void PADnote::PADlegatonote(REALTYPE freq,
                             bool externcall)
 {
     PADnoteParameters *parameters = pars;
-    //Controller *ctl_=ctl;
+    //ZASF_Controller *ctl_=ctl;
 
     // Manage legato stuff
     if(externcall)

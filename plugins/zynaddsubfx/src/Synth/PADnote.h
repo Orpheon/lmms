@@ -34,7 +34,7 @@ class PADnote
 {
     public:
         PADnote(PADnoteParameters *parameters,
-                Controller *ctl_,
+                ZASF_Controller *ctl_,
                 REALTYPE freq,
                 REALTYPE velocity,
                 int portamento_,
@@ -119,7 +119,7 @@ class PADnote
 
         REALTYPE    globaloldamplitude, globalnewamplitude, velocity, realfreq;
         REALTYPE   *tmpwave;
-        Controller *ctl;
+        ZASF_Controller *ctl;
 
         // Legato vars
         struct {

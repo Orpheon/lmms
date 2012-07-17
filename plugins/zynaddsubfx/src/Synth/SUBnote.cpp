@@ -28,7 +28,7 @@
 #include "../Misc/Util.h"
 
 SUBnote::SUBnote(SUBnoteParameters *parameters,
-                 Controller *ctl_,
+                 ZASF_Controller *ctl_,
                  REALTYPE freq,
                  REALTYPE velocity,
                  int portamento_,
@@ -203,7 +203,7 @@ void SUBnote::SUBlegatonote(REALTYPE freq,
                             bool externcall)
 {
     //SUBnoteParameters *parameters=pars;
-    //Controller *ctl_=ctl;
+    //ZASF_Controller *ctl_=ctl;
 
     // Manage legato stuff
     if(externcall)
@@ -543,7 +543,7 @@ void SUBnote::computecurrentparameters()
             envbw = BandWidthEnvelope->envout();
             envbw = pow(2, envbw);
         }
-        envbw *= ctl->bandwidth.relbw; //bandwidth controller
+        envbw *= ctl->bandwidth.relbw; //bandwidth ZASF_Controller
 
         REALTYPE tmpgain = 1.0 / sqrt(envbw * envfreq);
 

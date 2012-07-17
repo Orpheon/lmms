@@ -1,7 +1,7 @@
 /*
-  ZynAddSubFX - a software synthesizer
+  ZASF_AddSubFX - a software synthesizer
 
-  Controller.cpp - (Midi) Controllers implementation
+  ZASF_Controller.cpp - (Midi) Controllers implementation
   Copyright (C) 2002-2005 Nasca Octavian Paul
   Author: Nasca Octavian Paul
 
@@ -21,19 +21,21 @@
 */
 
 #include "Controller.h"
+#include "../../../../include/Controller.h"
+
 #include <math.h>
 #include <stdio.h>
 
-Controller::Controller()
+ZASF_Controller::ZASF_Controller()
 {
     defaults();
     resetall();
 }
 
-Controller::~Controller()
+ZASF_Controller::~ZASF_Controller()
 {}
 
-void Controller::defaults()
+void ZASF_Controller::defaults()
 {
     setpitchwheelbendrange(200); //2 halftones
     expression.receive    = 1;
@@ -67,7 +69,7 @@ void Controller::defaults()
     setportamento(0);
 }
 
-void Controller::resetall()
+void ZASF_Controller::resetall()
 {
     setpitchwheel(0); //center
     setexpression(127);
@@ -89,7 +91,7 @@ void Controller::resetall()
     NRPN.vallo = -1;
 }
 
-void Controller::setpitchwheel(int value)
+void ZASF_Controller::setpitchwheel(int value)
 {
     pitchwheel.data = value;
     REALTYPE cents = value / 8192.0;
@@ -98,12 +100,12 @@ void Controller::setpitchwheel(int value)
     //fprintf(stderr,"%ld %ld -> %.3f\n",pitchwheel.bendrange,pitchwheel.data,pitchwheel.relfreq);fflush(stderr);
 }
 
-void Controller::setpitchwheelbendrange(unsigned short int value)
+void ZASF_Controller::setpitchwheelbendrange(unsigned short int value)
 {
     pitchwheel.bendrange = value;
 }
 
-void Controller::setexpression(int value)
+void ZASF_Controller::setexpression(int value)
 {
     expression.data = value;
     if(expression.receive != 0)
@@ -112,26 +114,26 @@ void Controller::setexpression(int value)
         expression.relvolume = 1.0;
 }
 
-void Controller::setpanning(int value)
+void ZASF_Controller::setpanning(int value)
 {
     panning.data = value;
     panning.pan  = (value / 128.0 - 0.5) * (panning.depth / 64.0);
 }
 
-void Controller::setfiltercutoff(int value)
+void ZASF_Controller::setfiltercutoff(int value)
 {
     filtercutoff.data    = value;
     filtercutoff.relfreq =
         (value - 64.0) * filtercutoff.depth / 4096.0 * 3.321928;         //3.3219..=ln2(10)
 }
 
-void Controller::setfilterq(int value)
+void ZASF_Controller::setfilterq(int value)
 {
     filterq.data = value;
     filterq.relq = pow(30.0, (value - 64.0) / 64.0 * (filterq.depth / 64.0));
 }
 
-void Controller::setbandwidth(int value)
+void ZASF_Controller::setbandwidth(int value)
 {
     bandwidth.data = value;
     if(bandwidth.exponential == 0) {
@@ -148,7 +150,7 @@ void Controller::setbandwidth(int value)
     ;
 }
 
-void Controller::setmodwheel(int value)
+void ZASF_Controller::setmodwheel(int value)
 {
     modwheel.data = value;
     if(modwheel.exponential == 0) {
@@ -164,7 +166,7 @@ void Controller::setmodwheel(int value)
             pow(25.0, (value - 64.0) / 64.0 * (modwheel.depth / 80.0));
 }
 
-void Controller::setfmamp(int value)
+void ZASF_Controller::setfmamp(int value)
 {
     fmamp.data   = value;
     fmamp.relamp = value / 127.0;
@@ -174,7 +176,7 @@ void Controller::setfmamp(int value)
         fmamp.relamp = 1.0;
 }
 
-void Controller::setvolume(int value)
+void ZASF_Controller::setvolume(int value)
 {
     volume.data = value;
     if(volume.receive != 0)
@@ -183,7 +185,7 @@ void Controller::setvolume(int value)
         volume.volume = 1.0;
 }
 
-void Controller::setsustain(int value)
+void ZASF_Controller::setsustain(int value)
 {
     sustain.data = value;
     if(sustain.receive != 0)
@@ -192,14 +194,14 @@ void Controller::setsustain(int value)
         sustain.sustain = 0;
 }
 
-void Controller::setportamento(int value)
+void ZASF_Controller::setportamento(int value)
 {
     portamento.data = value;
     if(portamento.receive != 0)
         portamento.portamento = ((value < 64) ? 0 : 1);
 }
 
-int Controller::initportamento(REALTYPE oldfreq,
+int ZASF_Controller::initportamento(REALTYPE oldfreq,
                                REALTYPE newfreq,
                                bool legatoflag)
 {
@@ -261,7 +263,7 @@ int Controller::initportamento(REALTYPE oldfreq,
     return 1;
 }
 
-void Controller::updateportamento()
+void ZASF_Controller::updateportamento()
 {
     if(portamento.used == 0)
         return;
@@ -276,13 +278,13 @@ void Controller::updateportamento()
 }
 
 
-void Controller::setresonancecenter(int value)
+void ZASF_Controller::setresonancecenter(int value)
 {
     resonancecenter.data      = value;
     resonancecenter.relcenter =
         pow(3.0, (value - 64.0) / 64.0 * (resonancecenter.depth / 64.0));
 }
-void Controller::setresonancebw(int value)
+void ZASF_Controller::setresonancebw(int value)
 {
     resonancebandwidth.data  = value;
     resonancebandwidth.relbw =
@@ -291,7 +293,7 @@ void Controller::setresonancebw(int value)
 
 
 //Returns 0 if there is NRPN or 1 if there is not
-int Controller::getnrpn(int *parhi, int *parlo, int *valhi, int *vallo)
+int ZASF_Controller::getnrpn(int *parhi, int *parlo, int *valhi, int *vallo)
 {
     if(NRPN.receive == 0)
         return 1;
@@ -307,7 +309,7 @@ int Controller::getnrpn(int *parhi, int *parlo, int *valhi, int *vallo)
 }
 
 
-void Controller::setparameternumber(unsigned int type, int value)
+void ZASF_Controller::setparameternumber(unsigned int type, int value)
 {
     switch(type) {
     case C_nrpnhi:
@@ -333,7 +335,7 @@ void Controller::setparameternumber(unsigned int type, int value)
 
 
 
-void Controller::add2XML(XMLwrapper *xml)
+void ZASF_Controller::add2XML(XMLwrapper *xml)
 {
     xml->addpar("pitchwheel_bendrange", pitchwheel.bendrange);
 
@@ -362,7 +364,7 @@ void Controller::add2XML(XMLwrapper *xml)
     xml->addpar("resonance_bandwidth_depth", resonancebandwidth.depth);
 }
 
-void Controller::getfromXML(XMLwrapper *xml)
+void ZASF_Controller::getfromXML(XMLwrapper *xml)
 {
     pitchwheel.bendrange = xml->getpar("pitchwheel_bendrange",
                                        pitchwheel.bendrange,
